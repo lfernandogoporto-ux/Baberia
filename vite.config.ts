@@ -1,10 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { CSP, HEADERS } from './security-headers.mjs'
 
 export default defineConfig({
+  // Las mismas cabeceras de seguridad que tendrá el hosting, para probarlas con `npm run preview`
+  preview: { headers: HEADERS },
   plugins: [
     react(),
+    {
+      // En la versión final, la CSP también va dentro de la página por si el hosting no permite cabeceras
+      name: 'csp-meta',
+      apply: 'build',
+      transformIndexHtml: (html) => html.replace('<head>', `<head>
+    <meta http-equiv="Content-Security-Policy" content="${CSP.replace("; frame-ancestors 'none'", '')}" />`),
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],

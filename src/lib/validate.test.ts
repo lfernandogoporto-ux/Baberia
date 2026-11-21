@@ -1,6 +1,6 @@
 // Pruebas con el patrón AAA: Arrange (preparar), Act (actuar), Assert (comprobar)
 import { describe, expect, it } from 'vitest'
-import { clean, email, fileImage, isValid, minLen, number, password, personName, phoneBO, required } from './validate'
+import { clean, email, fileImage, isValid, minLen, number, password, personName, phoneBO, required, strongPassword } from './validate'
 
 describe('phoneBO: celular boliviano', () => {
   it.each(['70012345', '6 123 4567', '+591 70012345', '59170012345'])('acepta %s', (input) => {
@@ -73,8 +73,8 @@ describe('number', () => {
 
 describe('password, required y minLen', () => {
   it('exigen lo mínimo', () => {
-    expect(password('12345')).toMatch(/6 caracteres/)
-    expect(password('123456')).toBe('')
+    expect(password('')).not.toBe('')
+    expect(password('x')).toBe('')
     expect(required('  ')).not.toBe('')
     expect(minLen('ab', 3)).toMatch(/al menos 3/)
   })
@@ -106,5 +106,20 @@ describe('clean e isValid', () => {
     expect(limpio).toEqual({ celular: 'Falta' })
     expect(isValid(limpio)).toBe(false)
     expect(isValid(clean({ a: '' }))).toBe(true)
+  })
+})
+
+describe('strongPassword: contraseña segura al crear o cambiar', () => {
+  it.each([
+    ['', /Escribe/], ['abc12', /8 caracteres/], ['solamenteletras', /letras y números/],
+    ['1234567890', /letras y números/], [' corte2026 ', /espacios/], ['12345678a', /fácil/],
+  ])('rechaza "%s"', (input, msg) => {
+    // Act
+    const error = strongPassword(input)
+    // Assert
+    expect(error).toMatch(msg)
+  })
+  it('acepta letras y números con 8 o más caracteres', () => {
+    expect(strongPassword('Bunny2026corte')).toBe('')
   })
 })

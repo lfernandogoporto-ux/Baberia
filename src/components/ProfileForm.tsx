@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase, errMsg } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { normPhone } from '../lib/format'
-import { clean, email as vEmail, focusFirstError, isValid, password as vPassword, personName, phoneBO, type Errors } from '../lib/validate'
+import { clean, email as vEmail, focusFirstError, isValid, strongPassword, personName, phoneBO, type Errors } from '../lib/validate'
 import { authError } from './AuthForm'
 import { Alert, Field, useToast } from './ui'
 
@@ -81,7 +81,7 @@ export function ProfileForm({ onSaved }: { onSaved?: () => void }) {
   const savePass = async (e: FormEvent) => {
     e.preventDefault()
     setMsg(null)
-    const errs = clean({ pass: vPassword(pass), pass2: !pass2 ? 'Repite la contraseña' : pass2 !== pass ? 'Las contraseñas no coinciden' : '' })
+    const errs = clean({ pass: strongPassword(pass), pass2: !pass2 ? 'Repite la contraseña' : pass2 !== pass ? 'Las contraseñas no coinciden' : '' })
     setErrors({ ...errors, ...errs, pass: errs.pass ?? '', pass2: errs.pass2 ?? '' })
     if (!isValid(errs)) return focusFirstError()
     setBusy(true)
@@ -118,7 +118,7 @@ export function ProfileForm({ onSaved }: { onSaved?: () => void }) {
 
       <form className="panel stack" onSubmit={savePass} noValidate>
         <h2>Contraseña</h2>
-        <Field label="Contraseña nueva" error={errors.pass} hint="Mínimo 6 caracteres."><input type="password" value={pass} onChange={(e) => { setPass(e.target.value); clear('pass') }} autoComplete="new-password" /></Field>
+        <Field label="Contraseña nueva" error={errors.pass} hint="Mínimo 8 caracteres, con letras y números."><input type="password" value={pass} onChange={(e) => { setPass(e.target.value); clear('pass') }} autoComplete="new-password" /></Field>
         <Field label="Repite la contraseña nueva" error={errors.pass2}><input type="password" value={pass2} onChange={(e) => { setPass2(e.target.value); clear('pass2') }} autoComplete="new-password" /></Field>
         <button className="btn block" disabled={busy}>Cambiar contraseña</button>
       </form>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { supabase, errMsg } from '../lib/supabase'
 import { normPhone } from '../lib/format'
-import { clean, email as vEmail, focusFirstError, isValid, password as vPassword, personName, phoneBO, type Errors } from '../lib/validate'
+import { clean, email as vEmail, focusFirstError, isValid, password as vPassword, strongPassword, personName, phoneBO, type Errors } from '../lib/validate'
 import { Alert, Field } from './ui'
 
 /** Traduce los mensajes de Supabase Auth a algo que se entienda */
@@ -13,7 +13,7 @@ export const authError = (m: string) => {
   if (t.includes('email not confirmed')) return 'Falta confirmar tu correo. Abre el enlace que te llegó por email y vuelve a intentar.'
   if (t.includes('already registered')) return 'Ese correo ya tiene cuenta. Toca “Ya tengo cuenta”.'
   if (t.includes('rate limit')) return 'Demasiados intentos seguidos. Espera unos minutos e intenta otra vez.'
-  if (t.includes('password should be')) return 'La contraseña es muy corta: usa al menos 6 caracteres.'
+  if (t.includes('password should be')) return 'La contraseña es muy débil: usa al menos 8 caracteres con letras y números.'
   if (t.includes('same password')) return 'La nueva contraseña debe ser distinta a la anterior.'
   return m
 }
@@ -39,7 +39,7 @@ export function AuthForm({ audience, onDone }: { audience: 'staff' | 'client'; o
     setInfo('')
     const errs = clean<K>({
       email: vEmail(f.email),
-      password: vPassword(f.password),
+      password: mode === 'up' ? strongPassword(f.password) : vPassword(f.password),
       ...(mode === 'up' ? { name: personName(f.name), phone: phoneBO(f.phone, audience === 'staff') } : {}),
     })
     setErrors(errs)
@@ -86,7 +86,7 @@ export function AuthForm({ audience, onDone }: { audience: 'staff' | 'client'; o
           </>
         )}
         <Field label="Correo" error={errors.email}><input type="email" value={f.email} onChange={(e) => set('email', e.target.value)} autoComplete="email" /></Field>
-        <Field label="Contraseña" error={errors.password} hint={mode === 'up' ? 'Mínimo 6 caracteres.' : undefined}>
+        <Field label="Contraseña" error={errors.password} hint={mode === 'up' ? 'Mínimo 8 caracteres, con letras y números.' : undefined}>
           <input type="password" value={f.password} onChange={(e) => set('password', e.target.value)} autoComplete={mode === 'in' ? 'current-password' : 'new-password'} />
         </Field>
         {error && <Alert tone="bad">{error}</Alert>}

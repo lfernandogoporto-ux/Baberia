@@ -22,8 +22,19 @@ export const phoneBO = (v: string, optional = false) => {
 export const email = (v: string) =>
   !v.trim() ? 'Escribe el correo' : /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Ese correo no parece válido (ej. nombre@gmail.com)'
 
-export const password = (v: string) =>
-  !v ? 'Escribe una contraseña' : v.length < 6 ? 'La contraseña necesita al menos 6 caracteres' : ''
+/** Para entrar: solo que no esté vacía */
+export const password = (v: string) => (!v ? 'Escribe tu contraseña' : '')
+
+/** Para crear o cambiar: 8+ caracteres, con letras y números, sin espacios al inicio o final */
+export const strongPassword = (v: string) => {
+  if (!v) return 'Escribe una contraseña'
+  if (v.length < 8) return 'Usa al menos 8 caracteres'
+  if (v.length > 72) return 'Máximo 72 caracteres'
+  if (!/[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(v) || !/\d/.test(v)) return 'Combina letras y números'
+  if (v !== v.trim()) return 'Sin espacios al inicio o al final'
+  if (/^(12345678|password|contraseña|qwerty)/i.test(v)) return 'Esa contraseña es muy fácil de adivinar'
+  return ''
+}
 
 export const number = (v: string | number, { min, max, label = 'El valor', integer = false, optional = false }: { min?: number; max?: number; label?: string; integer?: boolean; optional?: boolean } = {}) => {
   // El nombre del campo ya está en la etiqueta: los mensajes van sin sujeto para que siempre suenen bien
