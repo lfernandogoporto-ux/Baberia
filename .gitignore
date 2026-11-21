@@ -1,0 +1,11 @@
+node_modules
+dist
+dev-dist
+*.log
+.env
+.env.local
+*.local
+
+# Skills de terceros instaladas solo en este equipo (ver README para reinstalarlas)
+.claude/skills/
+.claude/settings.local.json
