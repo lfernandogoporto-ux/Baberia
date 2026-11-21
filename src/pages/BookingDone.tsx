@@ -5,7 +5,8 @@ import { useAuth } from '../lib/auth'
 import { dateTimeLabel, mins, money, normPhone } from '../lib/format'
 import { clean, fileImage, focusFirstError, isValid, number, phoneBO, type Errors } from '../lib/validate'
 import { Alert, Field, GroupError, Spinner, StatusBadge } from '../components/ui'
-import { IconBell, IconStar, IconUpload } from '../components/icons'
+import { IconBell, IconCalendar, IconStar, IconUpload } from '../components/icons'
+import { downloadIcs } from '../lib/calendar'
 import { enableBookingPush, pushSupported } from '../lib/push'
 import type { Status } from '../lib/types'
 
@@ -177,6 +178,15 @@ export default function BookingDone() {
       )}
       {!profile && (
         <p className="ink2 small"><Link to="/cuenta">Crea tu cuenta</Link> para ver todas tus reservas y tu tarjeta de sellos en un solo lugar.</p>
+      )}
+
+      {active && (
+        <button className="btn block" onClick={() => downloadIcs({
+          id: b.id, start: b.starts_at, end: b.ends_at,
+          title: `Corte en ${settings?.name ?? 'Bunny Barber Studio'}`,
+          description: `${b.services.map((s) => s.name).join(' + ')} con ${b.barber}. Reserva: ${window.location.href}`,
+          location: settings?.address,
+        })}><IconCalendar size={20} />Agregar a mi calendario</button>
       )}
 
       {active && pushSupported() && !reminded && (

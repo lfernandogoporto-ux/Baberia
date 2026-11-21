@@ -29,7 +29,7 @@ export default function Display() {
   return (
     <div className="board" data-theme="dark">
       <header className="board-head">
-        <div className="shop">{b?.shop ?? 'Barbería Casa'}</div>
+        <div className="shop"><img src="/logo-256.webp" alt="" />{b?.shop ?? 'Bunny Barber Studio'}</div>
         <div className="clock">{time(now.toISOString())}</div>
       </header>
       <div className="pole thick" aria-hidden />

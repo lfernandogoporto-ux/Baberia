@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, errMsg, publicUrl } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import type { Barber, CatalogItem } from '../lib/types'
@@ -60,6 +60,9 @@ export default function Booking() {
   const [servicesError, setServicesError] = useState('')
   const holdRef = useRef<Hold | null>(null)
   holdRef.current = hold
+  const [params] = useSearchParams()
+  const [anyBarber, setAnyBarber] = useState(false)
+  const [first, setFirst] = useState<{ barber_id: string; full_name: string; slot_start: string } | null | undefined>(undefined)
 
   const chosen = useMemo(() => (catalog ?? []).filter((c) => picked.includes(c.service_id)), [catalog, picked])
   const totalMin = chosen.reduce((a, c) => a + c.minutes, 0)
@@ -82,8 +85,13 @@ export default function Booking() {
   useEffect(() => {
     void supabase.rpc('list_barbers').then(({ data, error }) => {
       if (error) setError(errMsg(error))
-      setBarbers((data as Barber[]) ?? [])
+      const list = (data as Barber[]) ?? []
+      setBarbers(list)
+      // Viene del inicio ("reservar con este barbero") o de "repetir mi corte"
+      const pre = list.find((b) => b.id === params.get('barbero'))
+      if (pre) void chooseBarber(pre, params.get('servicios')?.split(',').filter(Boolean) ?? [])
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Al salir de la pantalla se libera el horario retenido
@@ -97,14 +105,37 @@ export default function Booking() {
     setExpired(false)
   }
 
-  const chooseBarber = async (b: Barber) => {
+  const chooseBarber = async (b: Barber, preset: string[] = []) => {
+    setAnyBarber(false)
     setBarber(b)
     setCatalog(null)
     setPicked([])
     setStep(1)
     const { data, error } = await supabase.rpc('barber_service_catalog', { p_barber: b.id })
     if (error) setError(errMsg(error))
-    setCatalog((data as CatalogItem[]) ?? [])
+    const list = (data as CatalogItem[]) ?? []
+    setCatalog(list)
+    if (preset.length) setPicked(preset.filter((id) => list.some((c) => c.service_id === id)))
+  }
+
+  // Cualquier barbero: se usan los servicios con su precio y tiempo normales
+  const chooseAny = async () => {
+    setAnyBarber(true)
+    setBarber(null)
+    setCatalog(null)
+    setPicked([])
+    setStep(1)
+    const { data, error } = await supabase.from('services').select('id,name,category,description,base_price,base_minutes').eq('active', true).order('sort_order')
+    if (error) setError(errMsg(error))
+    setCatalog(((data ?? []) as { id: string; name: string; category: string; description: string | null; base_price: number; base_minutes: number }[])
+      .map((s) => ({ service_id: s.id, name: s.name, category: s.category, description: s.description, price: s.base_price, minutes: s.base_minutes })))
+  }
+
+  const findFirst = async () => {
+    setFirst(undefined)
+    const { data, error } = await supabase.rpc('first_available', { p_minutes: totalMin, p_days: Math.min(settings?.max_days_ahead ?? 14, 14) })
+    if (error) setError(errMsg(error))
+    setFirst(((data as { barber_id: string; full_name: string; slot_start: string }[]) ?? [])[0] ?? null)
   }
 
   const loadSlots = async (d: string) => {
@@ -117,17 +148,18 @@ export default function Booking() {
   }
 
   useEffect(() => {
-    if (step === 2) void loadSlots(date)
+    if (step === 2) void (anyBarber ? findFirst() : loadSlots(date))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, date])
 
-  const pickSlot = async (iso: string) => {
-    if (!barber) return
+  const pickSlot = async (iso: string, who: Barber | null = barber) => {
+    if (!who) return
     setBusy(true)
     setError('')
     try {
       await releaseHold()
-      const { data: id, error } = await supabase.rpc('hold_slot', { p_barber: barber.id, p_start: iso, p_service_ids: picked })
+      if (who !== barber) setBarber(who)
+      const { data: id, error } = await supabase.rpc('hold_slot', { p_barber: who.id, p_start: iso, p_service_ids: picked })
       if (error) throw error
       const { data: b } = await supabase.rpc('get_booking', { p_appointment: id })
       const fallback = (settings?.hold_minutes ?? 5) * 60000
@@ -193,6 +225,13 @@ export default function Booking() {
           <div className="panel"><Empty title="Aún no hay barberos con agenda">Vuelve a intentarlo más tarde o llama a la barbería.</Empty></div>
         ) : (
           <div className="list">
+            {barbers.length > 1 && (
+              <button className="item" onClick={() => void chooseAny()}>
+                <span className="monogram" aria-hidden>?</span>
+                <span className="grow"><span className="title">El primero que esté libre</span><span className="sub" style={{ display: 'block' }}>Te mostramos el horario más cercano con cualquier barbero</span></span>
+                <IconChevronRight className="muted" />
+              </button>
+            )}
             {barbers.map((b) => (
               <button key={b.id} className="item" onClick={() => void chooseBarber(b)} style={{ alignItems: b.photos?.length ? 'flex-start' : 'center' }}>
                 <span className="monogram" aria-hidden>{initials(b.full_name)}</span>
@@ -200,7 +239,7 @@ export default function Booking() {
                   <span className="title">{b.full_name}</span>
                   {b.rating != null && Number(b.ratings_count) > 0 && (
                     <span className="sub row" style={{ gap: 4 }}>
-                      <IconStar size={15} filled style={{ color: 'var(--warn)' }} />{Number(b.rating).toFixed(1)} de {b.ratings_count} {Number(b.ratings_count) === 1 ? 'opinión' : 'opiniones'}
+                      <IconStar size={15} filled style={{ color: 'var(--copper)' }} />{Number(b.rating).toFixed(1)} de {b.ratings_count} {Number(b.ratings_count) === 1 ? 'opinión' : 'opiniones'}
                     </span>
                   )}
                   {!!b.photos?.length && (
@@ -216,7 +255,7 @@ export default function Booking() {
 
       {step === 1 && (
         <>
-          <p className="ink2">Con {barber?.full_name}. Puedes elegir varios servicios.</p>
+          <p className="ink2">{anyBarber ? 'Con el primero que esté libre' : `Con ${barber?.full_name}`}. Puedes elegir varios servicios.</p>
           {!catalog ? <Spinner rows={4} /> : (
             <div className="list">
               {catalog.map((c) => {
@@ -250,7 +289,24 @@ export default function Booking() {
         </>
       )}
 
-      {step === 2 && (
+      {step === 2 && anyBarber && (
+        <>
+          <p className="ink2">{chosen.map((c) => c.name.toLowerCase()).join(' y ')}, unos {mins(totalMin)}.</p>
+          {first === undefined ? <Spinner rows={2} /> : first === null ? (
+            <div className="panel"><Empty icon={<IconCalendar size={28} />} title="No hay horarios libres en los próximos días">Prueba eligiendo un barbero o llama a la barbería.</Empty></div>
+          ) : (
+            <div className="panel stack">
+              <span className="muted small">Lo más pronto posible</span>
+              <b style={{ fontSize: '1.2rem' }}>{dateTimeLabel(first.slot_start)}</b>
+              <span className="ink2">con {first.full_name}</span>
+              <button className="btn primary block" disabled={busy} onClick={() => void pickSlot(first.slot_start, { id: first.barber_id, full_name: first.full_name, avatar_url: null })}>Reservar este horario</button>
+            </div>
+          )}
+          <button className="btn ghost block" onClick={() => { setAnyBarber(false); setStep(0) }}>Prefiero elegir barbero y hora</button>
+        </>
+      )}
+
+      {step === 2 && !anyBarber && (
         <>
           <p className="ink2">{barber?.full_name}, {chosen.map((c) => c.name.toLowerCase()).join(' y ')}, unos {mins(totalMin)}.</p>
           <div className="days" role="tablist" aria-label="Día">

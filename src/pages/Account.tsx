@@ -10,7 +10,7 @@ import { ProfileForm } from '../components/ProfileForm'
 import { QR } from '../components/qr'
 import { IconCalendar, IconChevronLeft, IconChevronRight, IconStar } from '../components/icons'
 
-interface Row { id: string; starts_at: string; status: Status; total_price: number; barber: string; services: string; stars?: number | null }
+interface Row { id: string; starts_at: string; status: Status; total_price: number; barber: string; barber_id: string; services: string; service_ids?: string[] | null; stars?: number | null }
 interface AccountData {
   shop: string
   profile: { full_name: string; phone: string | null; email: string; role: string }
@@ -21,18 +21,23 @@ interface AccountData {
 }
 type Tab = 'reservas' | 'historial' | 'tarjeta' | 'datos'
 
-function Rows({ rows }: { rows: Row[] }) {
+function Rows({ rows, repeat = false }: { rows: Row[]; repeat?: boolean }) {
   return (
     <div className="list">
       {rows.map((r) => (
-        <Link key={r.id} to={`/reserva/${r.id}`} className="item" style={{ textDecoration: 'none', color: 'inherit', alignItems: 'flex-start' }}>
-          <span className="grow stack tight">
-            <span className="row between"><span className="title">{dateTimeLabel(r.starts_at)}</span><StatusBadge status={r.status} /></span>
-            <span className="sub">{r.services} con {r.barber}, {money(r.total_price)}</span>
-            {r.stars ? <span className="row" style={{ gap: 2, color: 'var(--warn)' }} aria-label={`${r.stars} estrellas`}>{Array.from({ length: r.stars }, (_, i) => <IconStar key={i} size={14} filled />)}</span> : null}
-          </span>
-          <IconChevronRight className="muted" />
-        </Link>
+        <div key={r.id} className="item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 8 }}>
+          <Link to={`/reserva/${r.id}`} className="row" style={{ textDecoration: 'none', color: 'inherit', width: '100%', alignItems: 'flex-start' }}>
+            <span className="grow stack tight">
+              <span className="row between"><span className="title">{dateTimeLabel(r.starts_at)}</span><StatusBadge status={r.status} /></span>
+              <span className="sub">{r.services} con {r.barber}, {money(r.total_price)}</span>
+              {r.stars ? <span className="row" style={{ gap: 2, color: 'var(--copper)' }} aria-label={`${r.stars} estrellas`}>{Array.from({ length: r.stars }, (_, i) => <IconStar key={i} size={14} filled />)}</span> : null}
+            </span>
+            <IconChevronRight className="muted" />
+          </Link>
+          {repeat && r.status === 'completed' && !!r.service_ids?.length && (
+            <Link className="btn small" to={`/reservar?barbero=${r.barber_id}&servicios=${r.service_ids.join(',')}`}>Repetir este corte</Link>
+          )}
+        </div>
       ))}
     </div>
   )
@@ -73,6 +78,7 @@ export default function Account() {
   if (isStaff) {
     return (
       <div className="page stack">
+        <Link to="/" className="btn icon ghost" aria-label="Volver al inicio"><IconChevronLeft /></Link>
         <h1>Hola, {profile?.full_name.split(' ')[0]}</h1>
         <Alert tone="info">Tu cuenta es del equipo de la barbería.</Alert>
         <button className="btn primary block" onClick={() => nav('/app')}>Ir a mi agenda</button>
@@ -109,7 +115,7 @@ export default function Account() {
       {tab === 'historial' && (
         data.past.length === 0
           ? <div className="panel"><Empty icon={<IconCalendar size={28} />} title="Todavía no hay visitas anteriores" /></div>
-          : <Rows rows={data.past} />
+          : <Rows rows={data.past} repeat />
       )}
 
       {tab === 'tarjeta' && data.card && (

@@ -2,7 +2,7 @@
 self.addEventListener('push', (event) => {
   let d = {}
   try { d = event.data ? event.data.json() : {} } catch { d = { body: event.data && event.data.text() } }
-  event.waitUntil(self.registration.showNotification(d.title || 'Barbería Casa', {
+  event.waitUntil(self.registration.showNotification(d.title || 'Bunny Barber Studio', {
     body: d.body || '',
     icon: '/icon-192.png',
     badge: '/icon-192.png',

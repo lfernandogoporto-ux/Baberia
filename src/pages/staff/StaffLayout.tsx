@@ -33,9 +33,12 @@ export default function StaffLayout() {
     <>
       <header className="rail">
         <div className="rail-inner">
-          <Link to="/app/perfil" style={{ color: 'inherit', textDecoration: 'none' }} aria-label="Mi perfil">
-            <div className="brand">{settings?.name ?? 'Barbería Casa'}</div>
-            <div className="who">{profile?.full_name}</div>
+          <Link to="/app/perfil" className="brand-link" aria-label="Mi perfil">
+            <img src="/logo-256.webp" width={40} height={40} alt="" />
+            <span style={{ minWidth: 0 }}>
+              <span className="brand" style={{ display: 'block' }}>{settings?.name ?? 'Bunny Barber Studio'}</span>
+              <span className="who" style={{ display: 'block' }}>{profile?.full_name}</span>
+            </span>
           </Link>
           <button className="btn small ghost" onClick={() => void signOut()}><IconLogout size={20} />Salir</button>
         </div>

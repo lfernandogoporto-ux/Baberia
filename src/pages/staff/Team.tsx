@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
+import { barberShare } from '../../lib/pay'
 import type { BarberService, PayMode, Profile, Role, Service, WorkingHour } from '../../lib/types'
 import { WEEKDAYS, WEEK_ORDER, hhmm, money } from '../../lib/format'
 import { Field, GroupError, Modal, Spinner, initials, useToast } from '../../components/ui'
@@ -199,10 +200,7 @@ function PayForm({ p, onSaved }: { p: Profile; onSaved: () => void }) {
     onSaved()
   }
 
-  const share = mode === 'percent' ? example * Number(pct) / 100
-    : mode === 'salary' ? Number(salary)
-    : mode === 'mixed' ? Number(salary) + example * Number(pct) / 100
-    : mode === 'chair_rent' ? example - Number(rent) : null
+  const share = barberShare(mode, example, Number(pct) || 0, Number(salary) || 0, Number(rent) || 0)
 
   return (
     <div className="stack">

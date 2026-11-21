@@ -1,4 +1,4 @@
-# Barbería Casa
+# Bunny Barber Studio
 
 PWA para reservar cortes y administrar la barbería (Cochabamba, Bolivia). React + Vite + Supabase.
 
@@ -21,7 +21,19 @@ Abre http://localhost:5173. Las claves de Supabase están en `.env` (ver `.env.e
 
 ## Base de datos
 
-Las migraciones están en `supabase/migrations/` y ya fueron aplicadas al proyecto `barberia-casa`.
+Las migraciones están en `supabase/migrations/` y ya fueron aplicadas al proyecto `barberia-casa` de Supabase.
+
+## Pruebas (patrón AAA: preparar, actuar, comprobar)
+
+```powershell
+npm test
+```
+
+- **Unitarias** (`src/lib/*.test.ts`, Vitest): validaciones, fechas de Bolivia, dinero, comisiones y archivo de calendario.
+- **Base de datos** (`supabase/tests/database.test.sql`): 20 pruebas de reglas de negocio y seguridad (doble reserva, colchón, faltas, comisiones, caja, stock, sellos, fila, asistencia, cuentas, roles y RLS). Se ejecuta en el editor SQL de Supabase; todo se deshace al terminar y el mensaje final dice cuántas pasaron.
+- **Carga** (`scripts/load-test.mjs`): cientos de personas pidiendo el mismo horario a la vez (debe ganar 1) y miles de consultas públicas. Necesita un barbero con horario: `node scripts/load-test.mjs <barbero_id> <fecha> <servicio_id>`.
+
+Resultados del 20/11/2026: 300 y 500 intentos simultáneos por el mismo horario → ganó 1 en ambos; 3000 consultas con 150 a la vez → 560 por segundo, 0 errores, p95 de 0,4 s. Con 1500 clientes y ~16 500 citas, cada pantalla responde entre 1 y 250 ms.
 
 ## Qué hace
 

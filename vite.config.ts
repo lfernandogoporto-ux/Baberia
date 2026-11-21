@@ -7,28 +7,28 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Barbería Casa',
-        short_name: 'Casa',
-        description: 'Reserva tu corte y administra la barbería',
+        name: 'Bunny Barber Studio',
+        short_name: 'Bunny',
+        description: 'Reserva tu corte en Bunny Barber Studio y administra la barbería',
         lang: 'es',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#f1f3ef',
-        theme_color: '#172036',
+        background_color: '#0e0b08',
+        theme_color: '#0e0b08',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
-        // Incluye la tipografía para que la app se vea igual sin conexión
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['push-sw.js'],
+        // Incluye la tipografía y el logo para que la app se vea igual sin conexión
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+        globIgnores: ['push-sw.js', 'icon-512.png', 'icon-maskable-512.png'],
         // Recordatorios push: el manejador vive en public/push-sw.js
         importScripts: ['/push-sw.js'],
         navigateFallback: '/index.html',

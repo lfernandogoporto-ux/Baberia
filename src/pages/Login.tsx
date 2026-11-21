@@ -17,7 +17,7 @@ export default function Login() {
       <Link to="/" className="btn icon ghost" aria-label="Volver al inicio"><IconChevronLeft /></Link>
       <div className="stack tight">
         <h1>Entrar al equipo</h1>
-        <p className="ink2">{settings?.name ?? 'Barbería Casa'}. Acceso para barberos, recepción y administración.</p>
+        <p className="ink2">{settings?.name ?? 'Bunny Barber Studio'}. Acceso para barberos, recepción y administración.</p>
       </div>
       {session && profile?.role === 'client' && (
         <Alert tone="warn">

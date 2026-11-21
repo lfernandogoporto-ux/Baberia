@@ -80,6 +80,12 @@ export interface Settings {
   reactivation_message: string
   queue_enabled: boolean
   attendance_enabled: boolean
+  phone: string | null
+  whatsapp: string | null
+  instagram: string | null
+  maps_url: string | null
+  about: string | null
+  hide_prices: boolean
 }
 
 export interface CardInfo {

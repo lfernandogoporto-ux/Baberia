@@ -4,7 +4,8 @@ import { useAuth } from '../../lib/auth'
 import type { Service, Settings } from '../../lib/types'
 import { mins, money } from '../../lib/format'
 import { Field, GroupError, Modal, Spinner, useToast } from '../../components/ui'
-import { clean, fileImage, focusFirstError, isValid, number, type Errors } from '../../lib/validate'
+import { clean, fileImage, focusFirstError, isValid, number, phoneBO, type Errors } from '../../lib/validate'
+import { normPhone } from '../../lib/format'
 import { IconChevronRight, IconPlus } from '../../components/icons'
 
 export default function Business() {
@@ -120,6 +121,11 @@ function SettingsForm() {
     if (!nm) errs.name = 'Escribe el nombre de la barbería'
     else if (nm.length > 60) errs.name = 'El nombre es muy largo (máximo 60)'
     if ((s.address ?? '').length > 120) errs.address = 'La dirección es muy larga (máximo 120)'
+    if ((s.about ?? '').length > 300) errs.about = 'Muy largo (máximo 300)'
+    if (s.whatsapp) { const e = phoneBO(s.whatsapp); if (e) errs.whatsapp = e }
+    if (s.phone) { const e = phoneBO(s.phone); if (e) errs.phone = e }
+    if (s.instagram && !/^@?[A-Za-z0-9._]{2,30}$/.test(s.instagram.trim())) errs.instagram = 'Escribe solo el usuario, ej. @bunnybarberstudio'
+    if (s.maps_url && !/^https:\/\/\S+$/.test(s.maps_url.trim())) errs.maps_url = 'Pega un enlace que empiece con https://'
     for (const [k, min, max, label] of RULES) {
       const e = number(s[k] as number, { min, max, integer: true, label })
       if (e) errs[k] = e
@@ -158,6 +164,8 @@ function SettingsForm() {
       loyalty_enabled: s.loyalty_enabled, loyalty_stamps: s.loyalty_stamps, loyalty_reward: s.loyalty_reward.trim() || 'Corte gratis',
       loyalty_mid_at: s.loyalty_mid_at || null, loyalty_mid_reward: s.loyalty_mid_reward?.trim() || null,
       reactivation_enabled: s.reactivation_enabled, reactivation_days: s.reactivation_days, reactivation_message: s.reactivation_message,
+      about: s.about?.trim() || null, whatsapp: s.whatsapp ? normPhone(s.whatsapp) : null, phone: s.phone ? normPhone(s.phone) : null,
+      instagram: s.instagram?.trim().replace(/^@/, '') || null, maps_url: s.maps_url?.trim() || null, hide_prices: s.hide_prices,
     }).eq('id', 1)
     if (error) return toast(errMsg(error), true)
     await refreshSettings()
@@ -198,6 +206,24 @@ function SettingsForm() {
     <div className="stack">
       <Field label="Nombre de la barbería" error={errors.name}><input value={s.name} onChange={(e) => { setS({ ...s, name: e.target.value }); setErrors({ ...errors, name: '' }) }} /></Field>
       <Field label="Dirección" error={errors.address}><input value={s.address ?? ''} onChange={(e) => { setS({ ...s, address: e.target.value }); setErrors({ ...errors, address: '' }) }} placeholder="Ej. Av. Heroínas 123, Cochabamba" /></Field>
+
+      <section className="panel stack">
+        <h2>Lo que ven los clientes en el inicio</h2>
+        <Field label="Sobre la barbería (opcional)" error={errors.about} hint="Una o dos frases. Ej. Cortes clásicos y degradados desde 2022.">
+          <textarea rows={2} maxLength={300} value={s.about ?? ''} onChange={(e) => { setS({ ...s, about: e.target.value }); setErrors({ ...errors, about: '' }) }} />
+        </Field>
+        <div className="row wrap" style={{ alignItems: 'flex-start' }}>
+          <Field label="WhatsApp (opcional)" error={errors.whatsapp}><input inputMode="tel" value={s.whatsapp ?? ''} placeholder="70012345" onChange={(e) => { setS({ ...s, whatsapp: e.target.value }); setErrors({ ...errors, whatsapp: '' }) }} /></Field>
+          <Field label="Teléfono para llamar (opcional)" error={errors.phone}><input inputMode="tel" value={s.phone ?? ''} placeholder="70012345" onChange={(e) => { setS({ ...s, phone: e.target.value }); setErrors({ ...errors, phone: '' }) }} /></Field>
+        </div>
+        <div className="row wrap" style={{ alignItems: 'flex-start' }}>
+          <Field label="Instagram (opcional)" error={errors.instagram}><input value={s.instagram ?? ''} placeholder="@bunnybarberstudio" onChange={(e) => { setS({ ...s, instagram: e.target.value }); setErrors({ ...errors, instagram: '' }) }} /></Field>
+          <Field label="Enlace de Google Maps (opcional)" error={errors.maps_url} hint="En Google Maps toca Compartir y copia el enlace.">
+            <input inputMode="url" value={s.maps_url ?? ''} placeholder="https://maps.app.goo.gl/…" onChange={(e) => { setS({ ...s, maps_url: e.target.value }); setErrors({ ...errors, maps_url: '' }) }} />
+          </Field>
+        </div>
+        <label className="check-row"><input type="checkbox" checked={s.hide_prices} onChange={(e) => setS({ ...s, hide_prices: e.target.checked })} />Ocultar precios en el inicio (se ven igual al reservar)</label>
+      </section>
 
       <section className="panel stack">
         <h2>QR de pago del local</h2>

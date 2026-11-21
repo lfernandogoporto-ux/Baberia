@@ -1,46 +1,35 @@
-# DESIGN.md — Barbería Casa
+# DESIGN.md — Bunny Barber Studio
 
 ## Escena de uso
-- **Equipo** (barberos, recepción, admin): celular en la mano dentro del local, con luz de día o luz fuerte, entre corte y corte. Necesitan leer la agenda de un vistazo y tocar botones grandes.
-- **Clientes**: reservan desde su celular, en cualquier lugar, en menos de un minuto.
+- **Equipo** (barberos, recepción, admin): celular en la mano dentro del local, entre corte y corte. Leen la agenda de un vistazo y tocan botones grandes.
+- **Clientes**: reservan desde su celular en menos de un minuto; el inicio también es la vitrina del local.
 
-Modo claro por defecto (local iluminado); modo oscuro automático según el sistema.
+Claro u oscuro según el celular. La portada, la barra del equipo y la pantalla del local son siempre negras, como el logo.
 
 ## Mundo visual
-Barbería de barrio clásica: el **poste** rojo/blanco/azul, azulejo de porcelana, letreros de vidriera con letra condensada. El mundo aporta solo tipografía, paleta, densidad y un gesto firma. Los controles son los estándar de la web.
+El logo: insignia negra y cobre, conejo grabado, letras serif clásicas y el canto acuñado de una moneda. El mundo aporta tipografía, paleta y un gesto firma; los controles son los estándar de la web.
 
-## Paleta
+## Paleta (tomada del logo)
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| Porcelana `--ground` | `#F1F3EF` | `#0F1628` | Fondo |
-| Superficie `--surface` | `#FFFFFF` | `#172038` | Listas y paneles |
-| Acero `--surface-2` | `#E6E9E4` | `#1F2A45` | Segunda capa neutra, controles |
-| Tinta `--ink` | `#172036` | `#ECEFE8` | Texto, botón principal, barra superior |
-| Poste `--pole` | `#B5262B` | `#E0524F` | Firma del poste, acciones destructivas, errores |
-| Barbicida `--teal` | `#1F7A86` | `#4FB3BF` | Selección, foco, pestaña activa, "en curso" |
+| `--ground` | `#F2F0EC` | `#0E0B08` | Fondo |
+| `--surface` | `#FFFFFF` | `#17130F` | Listas y paneles |
+| `--ink` | `#17120D` | `#F3EADC` | Texto, botón principal (claro) |
+| `--copper` | `#B9864D` | `#C9955A` | Cobre del logo: firma, sellos, rellenos |
+| `--teal` (acento) | `#8A5A24` | `#D6A467` | Enlaces, foco, selección, pestaña activa |
+| `--rail` | `#0E0B08` | `#080605` | Portada, barra del equipo, pantalla del local |
 
-Estados: éxito `#2E7D4F`, aviso `#9A6212`, error = poste.
+Estados: éxito verde, aviso ámbar, error rojo. Nunca cobre para errores.
 
 ## Tipografía
-Una sola familia: **Archivo** (variable, con ancho 62–125%), servida desde el propio sitio.
-- Texto y controles: ancho normal, 16px, escala 1.2.
-- Títulos: ancho 75%, peso 750, como letrero.
-- Horas de la agenda: ancho 70%, peso 700, números tabulares. Es la columna tipo horario.
-- Nombre del local en el inicio: ancho 62%, peso 800, grande, como letrero de vidriera.
+- **DM Serif Display** para títulos, el nombre del local y la portada (eco de las letras del logo).
+- **Archivo** (ancho variable) para todo lo demás: texto, botones, datos, horas condensadas en la agenda.
 
 ## Gesto firma
-La **franja del poste** (diagonal roja, blanca y azul):
-- 6px bajo la barra superior del equipo y en el inicio.
-- Como barra de cuenta regresiva mientras se retiene un horario: la franja gira como el poste y se acorta con el tiempo que queda.
+El **canto acuñado**: muescas cobre entre dos filetes, como el borde de la insignia. Va bajo la barra del equipo, bajo la portada, en la pantalla del local y en la cuenta regresiva de la reserva (las muescas avanzan y la barra se acorta).
 
-Nada más usa la franja.
-
-## Forma
-- Radios: controles 10px, paneles 14px, hojas inferiores 18px.
-- Listas en un solo panel con líneas finas entre filas, no tarjetas sueltas iguales.
-- Sin barras de color a un costado, sin emojis como íconos (íconos SVG propios, trazo 1.75), sin etiquetas en mayúsculas sobre títulos, sin "·" uniendo datos, sin "→" en botones.
-
-## Movimiento
-- Presionar: `scale(0.97)` en 160ms `cubic-bezier(0.23,1,0.32,1)`.
-- Hojas inferiores: suben con `cubic-bezier(0.32,0.72,0,1)` en 320ms.
-- Hover solo en dispositivos con puntero fino. `prefers-reduced-motion` quita los desplazamientos.
+## Forma y movimiento
+- Radios: controles 10px, paneles 14px, hojas 18px. Listas en un panel con líneas finas.
+- Íconos SVG propios de trazo 1.75. Sin emojis, sin etiquetas en mayúsculas sobre títulos.
+- Presionar: `scale(0.97)` en 160ms. Hojas suben en 320ms. `prefers-reduced-motion` quita los desplazamientos.
+- Errores de formulario: borde rojo y mensaje debajo del campo, con el foco en el primero.
